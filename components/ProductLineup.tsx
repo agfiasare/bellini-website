@@ -18,42 +18,75 @@ type ProductModel = {
   isFeatured?: boolean;
 };
 
-/** Imágenes desde public/images/assets */
-const ASSETS_BASE = "/images/assets/";
-const IMG_REFERENCIA =
-  ASSETS_BASE +
-  encodeURIComponent(
-    "Horno bellini version de referencia pra hornos de 15 bandejas , 10 bandejas y 8 bandejas  (1).png"
-  );
-const IMG_OVEN_001 = ASSETS_BASE + "oven_001.png";
+/**
+ * Imágenes de la línea de producto.
+ * Colocar en public/images/lineup/: convector-4-bandejas.png, convector-8-bandejas.png,
+ * rotativo-10-bandejas.png, rotativo-15-bandejas.png (o .jpg).
+ */
+const LINEUP_BASE = "/images/lineup/";
 
 const MODELS: ProductModel[] = [
   {
-    id: "serie-pro",
-    name: "Serie Pro",
-    image: IMG_OVEN_001,
+    id: "convector-4",
+    name: "Horno de 4 bandejas",
+    image: LINEUP_BASE + "convector-4-bandejas.png",
     features: [
-      "Acero inoxidable AISI",
-      "Control digital de precisión",
-      "Aislamiento térmico de alta densidad",
-      "Eficiencia energética optimizada",
+      "Capacidad: 4 bandejas 60 x 40 con distancia de 9 cm entre ellas.",
+      "Rendimiento: Hasta 30 kg de pan por hora o 1000 medialunas.",
+      "Ahorro energético: Quemador con corte automático. Quemador de 20.000 kcal.",
+      "Termostato regulable de 0 a 300°C; 250°C en 5 minutos.",
+      "Comando manual para control preciso de la cocción.",
+      "Seguridad: Válvula de seguridad. Acero inoxidable esmerilado.",
+      "Garantía 1 año. Voltaje 220V.",
     ],
     ctaLabel: "Ver especificaciones",
-    ctaHref: "#producto",
+    ctaHref: "#especificaciones",
     isFeatured: true,
   },
   {
-    id: "serie-standard",
-    name: "Serie Standard",
-    image: IMG_REFERENCIA,
+    id: "convector-8",
+    name: "Horno Convector de 8 bandejas",
+    image: LINEUP_BASE + "convector-8-bandejas.png",
     features: [
-      "Construcción robusta",
-      "Panel de control intuitivo",
-      "Mantenimiento simplificado",
-      "Ideal para volúmenes medios",
+      "Capacidad: 8 bandejas con 9 cm entre ellas.",
+      "Rendimiento: Hasta 40 kg de pan por hora o 1.500 medialunas.",
+      "Ahorro energético: Quemador con corte automático.",
+      "Comando manual y termostato de 0 a 300°C.",
+      "Construcción en acero inoxidable esmerilado.",
+      "Garantía 1 año. Voltaje 220V.",
     ],
-    ctaLabel: "Consultar",
-    ctaHref: "#contacto",
+    ctaLabel: "Ver especificaciones",
+    ctaHref: "#especificaciones",
+  },
+  {
+    id: "rotativo-10",
+    name: "Horno Rotativo de 10 bandejas",
+    image: LINEUP_BASE + "rotativo-10-bandejas.png",
+    features: [
+      "Capacidad: 10 bandejas con distribución uniforme del calor.",
+      "Rendimiento: Ideal para grandes volúmenes de pan y pastelería.",
+      "Ahorro energético: Quemador con corte automático.",
+      "Comando manual con termostato ajustable de 0 a 300°C.",
+      "Construcción en acero inoxidable, resistencia y durabilidad.",
+      "Garantía 1 año. Voltaje 220V.",
+    ],
+    ctaLabel: "Ver especificaciones",
+    ctaHref: "#especificaciones",
+  },
+  {
+    id: "rotativo-15",
+    name: "Horno de 15 bandejas",
+    image: LINEUP_BASE + "rotativo-15-bandejas.png",
+    features: [
+      "Capacidad: 15 bandejas para producción mayor y más eficiente.",
+      "Rendimiento: Hasta 100 kg de pan o pastelería por ciclo.",
+      "Ahorro energético: Quemador con corte automático.",
+      "Comando manual con termostato regulable de 0 a 300°C.",
+      "Construcción robusta en acero inoxidable, fácil de limpiar.",
+      "Garantía 1 año. Voltaje 220V.",
+    ],
+    ctaLabel: "Ver especificaciones",
+    ctaHref: "#especificaciones",
   },
 ];
 
@@ -115,11 +148,11 @@ export default function ProductLineup() {
             Nuestra línea de hornos industriales
           </h2>
           <p className="mx-auto max-w-2xl text-industrial-silver">
-            Dos soluciones diseñadas para distintos procesos productivos
+            Cuatro modelos diseñados para distintos procesos productivos
           </p>
         </header>
 
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-10 lg:items-stretch">
+        <div className="grid gap-6 sm:grid-cols-2 lg:gap-8 lg:items-stretch xl:grid-cols-4">
           {MODELS.map((model, i) => (
             <div
               key={model.id}

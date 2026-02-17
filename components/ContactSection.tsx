@@ -83,7 +83,7 @@ export default function ContactSection() {
     return next;
   }, []);
 
-  /** Envío mock: validar, luego console.log y reset. Fácil reemplazar por API real. */
+  /** Envío mock: validar y reset. Reemplazar por fetch() al backend cuando esté listo. */
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -92,8 +92,7 @@ export default function ContactSection() {
       if (Object.keys(nextErrors).length > 0) return;
 
       setIsSubmitting(true);
-      // --- Envío mock: reemplazar por fetch() a tu backend ---
-      console.log("[ContactSection] Envío mock — datos:", formState);
+      // TODO: reemplazar por fetch() al endpoint de contacto
       setTimeout(() => {
         setFormState({ nombre: "", empresa: "", email: "", mensaje: "" });
         setErrors({});

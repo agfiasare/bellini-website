@@ -1,7 +1,5 @@
-# Modelos 3D
+# Modelos 3D (opcional)
 
-Colocá aquí el archivo **oven.glb** del horno industrial.
+Esta carpeta no se utiliza en la versión actual de la landing. La sección Producto usa una imagen estática (`/images/oven-360/oven_001.png`).
 
-- Ruta esperada: `public/models/oven.glb`
-- El componente `Product3D` la carga en la sección de producto protagonista.
-- Formato: GLB (Binary glTF). Tamaño recomendado: optimizado para web (~10 MB o menos).
+Si en el futuro se incorpora un modelo 3D (GLB), puede colocarse aquí y referenciarse desde el código.

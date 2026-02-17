@@ -3,23 +3,37 @@
 import { useRef, useEffect } from "react";
 import Image from "next/image";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
-
-/** Umbral de píxeles de scroll para considerar "primer scroll" */
+/** Umbral de píxeles de scroll para considerar "primer scroll" (navbar) */
 const FIRST_SCROLL_THRESHOLD = 8;
 
+// --- Configuración del slider automático (ajustar si hace falta) ---
+/** Intervalo entre cambios de imagen, en ms. Ej: 5000 = 5 segundos. */
+const SLIDER_INTERVAL_MS = 5000;
+/** Duración del crossfade entre imágenes, en segundos. */
+const CROSSFADE_DURATION = 1.2;
+/** Intensidad general del overlay (0–1). Afecta el tramo superior y medio; el inferior siempre termina en negro para transición hero → producto. */
+const OVERLAY_OPACITY = 0.55;
+
+const HERO_IMAGES = [
+  "/images/hero-bakery/bakery_01.png",
+  "/images/hero-bakery/bakery_02.png",
+  "/images/hero-bakery/bakery_03.png",
+  "/images/hero-bakery/bakery_04.png",
+  "/images/hero-bakery/bakery_05.png",
+  "/images/hero-bakery/bakery_06.png",
+];
+
 /**
- * Hero en dos estados:
- * - Inicial: fondo negro, texto centrado, sin video ni navbar.
- * - Tras el primer scroll: video fade-in, navbar slide-down sticky; texto sigue visible.
- * Animaciones suaves con GSAP; el hero se mantiene en 100vh.
+ * Hero con slider automático de imágenes de panadería.
+ * - Fondo: secuencia automática con crossfade (sin scroll).
+ * - Overlay oscuro permanente entre imagen y texto para legibilidad.
+ * - Texto centrado y estable. Scroll solo afecta secciones siguientes.
  */
+
 export default function HeroVideo() {
   const sectionRef = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const videoWrapRef = useRef<HTMLDivElement>(null);
+  const imagesContainerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const eyebrowRef = useRef<HTMLParagraphElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -27,7 +41,6 @@ export default function HeroVideo() {
   const scrollCueRef = useRef<HTMLDivElement>(null);
   const navbarRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
-
   const hasTriggeredRef = useRef(false);
 
   // --- Entrada inicial del copy (stagger) ---
@@ -68,9 +81,35 @@ export default function HeroVideo() {
       .to(scrollCueRef.current, { opacity: 1, duration: 0.6 }, 1.15);
   }, []);
 
-  // --- Primer scroll: mostrar video + navbar; luego ScrollTrigger para fade-out del video al seguir scrolleando ---
+  // --- Slider automático: crossfade cada SLIDER_INTERVAL_MS (sin scroll) ---
   useEffect(() => {
-    if (!sectionRef.current || !videoWrapRef.current || !navbarRef.current) return;
+    const container = imagesContainerRef.current;
+    if (!container) return;
+
+    const layers = container.querySelectorAll<HTMLDivElement>("[data-hero-layer]");
+    const n = layers.length;
+    if (!n) return;
+
+    let currentIndex = 0;
+
+    const goToNext = () => {
+      const nextIndex = (currentIndex + 1) % n;
+      const currentEl = layers[currentIndex];
+      const nextEl = layers[nextIndex];
+      if (!currentEl || !nextEl) return;
+
+      gsap.to(currentEl, { opacity: 0, duration: CROSSFADE_DURATION, ease: "power2.inOut" });
+      gsap.to(nextEl, { opacity: 1, duration: CROSSFADE_DURATION, ease: "power2.inOut" });
+      currentIndex = nextIndex;
+    };
+
+    const intervalId = setInterval(goToNext, SLIDER_INTERVAL_MS);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // --- Primer scroll: mostrar navbar ---
+  useEffect(() => {
+    if (!navbarRef.current) return;
 
     const onScroll = () => {
       if (hasTriggeredRef.current) return;
@@ -78,69 +117,18 @@ export default function HeroVideo() {
       if (y < FIRST_SCROLL_THRESHOLD) return;
 
       hasTriggeredRef.current = true;
-
       window.removeEventListener("scroll", onScroll);
 
-      const ctx = gsap.context(() => {
-        // Video: fade-in suave como background
-        gsap.to(videoWrapRef.current, {
+      gsap.fromTo(
+        navbarRef.current,
+        { y: -100, opacity: 0 },
+        {
+          y: 0,
           opacity: 1,
-          duration: 1.4,
-          ease: "power2.inOut",
-        });
-        if (videoRef.current) {
-          videoRef.current.play().catch(() => {});
+          duration: 0.7,
+          ease: "power2.out",
         }
-
-        // Navbar: slide-down desde arriba y queda fijo
-        gsap.fromTo(
-          navbarRef.current,
-          { y: -100, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.7,
-            ease: "power2.out",
-          }
-        );
-
-        // Fade-out del video al seguir scrolleando (solo activo después del primer scroll)
-        gsap.to(videoWrapRef.current, {
-          opacity: 0,
-          duration: 1,
-          ease: "power2.inOut",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top top",
-            end: "80vh top",
-            scrub: 1.2,
-          },
-        });
-
-        gsap.to(contentRef.current, {
-          opacity: 0,
-          y: -40,
-          duration: 1,
-          ease: "power2.inOut",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top top",
-            end: "60vh top",
-            scrub: 1,
-          },
-        });
-
-        gsap.to(scrollCueRef.current, {
-          opacity: 0,
-          duration: 0.5,
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top top",
-            end: "30vh top",
-            scrub: 0.5,
-          },
-        });
-      }, sectionRef);
+      );
     };
 
     window.addEventListener("scroll", onScroll, { passive: true } as AddEventListenerOptions);
@@ -149,7 +137,6 @@ export default function HeroVideo() {
 
   return (
     <>
-      {/* Navbar: oculto hasta el primer scroll, luego sticky desde arriba */}
       <header
         ref={navbarRef}
         className="fixed left-0 right-0 top-0 z-50 -translate-y-full opacity-0 border-b border-industrial-steel/40 bg-industrial-black/90 backdrop-blur-md"
@@ -171,34 +158,19 @@ export default function HeroVideo() {
             />
           </a>
           <nav className="flex items-center gap-6 text-sm text-industrial-silver">
-            <a
-              href="#producto"
-              className="transition-colors hover:text-industrial-accent"
-            >
+            <a href="#producto" className="transition-colors hover:text-industrial-accent">
               Producto
             </a>
-            <a
-              href="#linea"
-              className="transition-colors hover:text-industrial-accent"
-            >
+            <a href="#linea" className="transition-colors hover:text-industrial-accent">
               Línea
             </a>
-            <a
-              href="#especificaciones"
-              className="transition-colors hover:text-industrial-accent"
-            >
+            <a href="#especificaciones" className="transition-colors hover:text-industrial-accent">
               Especificaciones
             </a>
-            <a
-              href="#proceso"
-              className="transition-colors hover:text-industrial-accent"
-            >
+            <a href="#proceso" className="transition-colors hover:text-industrial-accent">
               Proceso
             </a>
-            <a
-              href="#contacto"
-              className="transition-colors hover:text-industrial-accent"
-            >
+            <a href="#contacto" className="transition-colors hover:text-industrial-accent">
               Contacto
             </a>
           </nav>
@@ -208,37 +180,37 @@ export default function HeroVideo() {
       <section
         ref={sectionRef}
         className="relative h-screen w-full overflow-hidden"
-        aria-label="Hero con video de fabricación"
+        aria-label="Hero con secuencia de imágenes de panadería"
       >
-        {/* Fondo negro sólido siempre visible (debajo del video) */}
+        {/* Fondo negro sólido (debajo de las imágenes) */}
         <div className="absolute inset-0 bg-industrial-black" aria-hidden />
 
-        {/* Contenedor del video: opacity 0 inicial, fade-in al primer scroll */}
-        <div
-          ref={videoWrapRef}
-          className="absolute inset-0 z-0 opacity-0"
-          aria-hidden
-        >
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="absolute inset-0 h-full w-full object-cover"
-            src="/videos/fabricacion.mp4"
-            poster="/images/hero-poster.jpg"
-          >
-            Tu navegador no soporta video HTML5.
-          </video>
+        {/* Secuencia de imágenes de panadería */}
+        <div ref={imagesContainerRef} className="absolute inset-0 z-0" aria-hidden>
+          {HERO_IMAGES.map((src, i) => (
+            <div
+              key={src}
+              data-hero-layer
+              className="absolute inset-0 transition-none"
+              style={{ opacity: i === 0 ? 1 : 0 }}
+              aria-hidden
+            >
+              <Image
+                src={src}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="100vw"
+                priority={i === 0}
+              />
+            </div>
+          ))}
+
+          {/* Overlay en gradiente vertical: suave arriba, muy oscuro abajo para fundir con la sección producto (negro) */}
           <div
-            className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.03]"
+            className="absolute inset-0 pointer-events-none z-[1]"
             style={{
-              backgroundImage: `radial-gradient(ellipse 80% 50% at 50% 50%, transparent 40%, black 100%)`,
+              background: `linear-gradient(to bottom, rgba(0,0,0,${0.2 * OVERLAY_OPACITY}) 0%, rgba(0,0,0,${0.5 * OVERLAY_OPACITY}) 25%, rgba(0,0,0,${OVERLAY_OPACITY}) 50%, rgba(0,0,0,0.92) 85%, rgba(0,0,0,1) 100%)`,
             }}
             aria-hidden
           />
@@ -265,9 +237,7 @@ export default function HeroVideo() {
             style={{ textShadow: "0 0 60px rgba(0,0,0,0.5)" }}
           >
             Hornos que definen
-            <span className="mt-2 block text-industrial-accent">
-              el estándar
-            </span>
+            <span className="mt-2 block text-industrial-accent">el estándar</span>
           </h1>
           <p
             ref={subtitleRef}

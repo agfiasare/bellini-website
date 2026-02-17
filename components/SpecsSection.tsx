@@ -6,12 +6,23 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/** Especificaciones a animar con count-up */
-const SPECS = [
-  { label: "Potencia", value: 24, suffix: " kW", duration: 2 },
-  { label: "Capacidad", value: 500, suffix: " L", duration: 2 },
-  { label: "Temperatura máxima", value: 350, suffix: " °C", duration: 2 },
-  { label: "Consumo energético", value: 18, suffix: " kWh", duration: 2 },
+/** Métricas del bloque (confiabilidad y alcance). */
+const METRICS = [
+  {
+    label: "Clientes",
+    value: 500,
+    prefix: "Más de ",
+    suffix: " clientes",
+    duration: 2,
+    description:
+      "Empresas y panaderías en toda Argentina confían en nuestros hornos.",
+  },
+  {
+    label: "Cobertura",
+    headline: "Presencia regional",
+    description:
+      "Equipos instalados en Argentina, Bolivia y Brasil.",
+  },
 ];
 
 /**
@@ -47,30 +58,38 @@ function useCountUp(
   return count;
 }
 
-/** Carta de una métrica con count-up */
-function SpecCard({
-  label,
-  value,
-  suffix,
-  duration,
+/** Carta de una métrica: count-up opcional y texto secundario */
+function MetricCard({
+  item,
   isActive,
 }: {
-  label: string;
-  value: number;
-  suffix: string;
-  duration: number;
+  item: (typeof METRICS)[number];
   isActive: boolean;
 }) {
-  const count = useCountUp(value, duration, isActive);
+  const hasCountUp = "value" in item && item.value != null;
+  const count = useCountUp(
+    hasCountUp ? (item as { value: number }).value : 0,
+    hasCountUp ? (item as { duration: number }).duration : 0,
+    isActive && hasCountUp
+  );
+
+  const headline = hasCountUp
+    ? `${(item as { prefix?: string }).prefix ?? ""}${count}${(item as { suffix?: string }).suffix ?? ""}`
+    : (item as { headline: string }).headline;
+
   return (
     <div className="rounded-lg border border-industrial-steel bg-industrial-charcoal/50 p-6 backdrop-blur-sm transition-colors hover:border-industrial-accent/40 md:p-8">
       <p className="mb-2 text-[11px] font-medium uppercase tracking-widest text-industrial-silver">
-        {label}
+        {item.label}
       </p>
       <p className="font-mono text-3xl font-light tabular-nums text-white md:text-4xl">
-        {count}
-        {suffix}
+        {headline}
       </p>
+      {"description" in item && item.description && (
+        <p className="mt-3 text-sm leading-relaxed text-industrial-silver/90">
+          {item.description}
+        </p>
+      )}
     </div>
   );
 }
@@ -156,17 +175,10 @@ export default function SpecsSection() {
 
         <div
           ref={gridRef}
-          className="grid w-full max-w-5xl grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-8"
+          className="grid w-full max-w-5xl grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:gap-8"
         >
-          {SPECS.map((spec) => (
-            <SpecCard
-              key={spec.label}
-              label={spec.label}
-              value={spec.value}
-              suffix={spec.suffix}
-              duration={spec.duration}
-              isActive={specsVisible}
-            />
+          {METRICS.map((metric) => (
+            <MetricCard key={metric.label} item={metric} isActive={specsVisible} />
           ))}
         </div>
       </div>

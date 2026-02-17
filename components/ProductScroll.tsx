@@ -1,34 +1,16 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
+import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/**
- * Secuencia 360°: imágenes en public/images/oven-360/ (todas .png).
- * Orden invertido para coincidir con el estándar Serie Pro (vista de referencia).
- */
-const OVEN_360_BASE = "/images/oven-360/";
-const FRAME_SOURCES: string[] = [
-  OVEN_360_BASE + "oven_011.png",
-  OVEN_360_BASE + "oven_010.png",
-  OVEN_360_BASE + "oven_009.png",
-  OVEN_360_BASE + "oven_008.png",
-  OVEN_360_BASE + "oven_007.png",
-  OVEN_360_BASE + "oven_006.png",
-  OVEN_360_BASE + "oven_005.png",
-  OVEN_360_BASE + "oven_004.png",
-  OVEN_360_BASE + "oven_003.png",
-  OVEN_360_BASE + "oven_002.png",
-  OVEN_360_BASE + "oven_001.png",
-];
-const FRAME_COUNT = FRAME_SOURCES.length;
-/** Fallback si alguna imagen no carga: 1 imagen + rotateY o placeholder. */
-const FALLBACK_SINGLE_IMAGE = "/images/oven-360/oven.svg";
+/** Imagen estática del horno (sin rotación). */
+const OVEN_IMAGE_SRC = "/images/oven-360/oven_001.png";
 
-/** Criterios de diseño: título + descripción técnica (1–2 líneas) */
+/** Criterios de diseño: título + descripción técnica */
 const DESIGN_CRITERIA = [
   {
     title: "Estabilidad térmica",
@@ -47,212 +29,238 @@ const DESIGN_CRITERIA = [
   },
 ];
 
+/** Scroll total durante el pin (px). Ajustar para más/menos “tiempo” en cada estado. */
+const PIN_SCROLL_LENGTH = 3200;
+/** Breakpoint (px) para desktop vs mobile. */
+const DESKTOP_BP = 768;
+/** Margen superior mínimo (px) para que el texto no quede bajo el navbar (h-16 ≈ 64px + respiro). */
+const NAVBAR_OFFSET_PX = 80;
+
 /**
- * Bloque de producto: primero visual, después explicativo.
- * - Fase visual: solo el horno en 360°, título "El producto" que se desvanece al rotar
- * - Ancla: horno vuelve a frontal y se bloquea
- * - Fase explicativa: criterios de diseño (Pensado para la industria) con stagger
+ * Bloque Producto: narrativa por scroll (sin rotación).
+ * Desktop: texto → texto sube → imagen horno → layout imagen derecha + características izquierda.
+ * Mobile: columna (texto, imagen, características) con fade + slide vertical.
  */
 export default function ProductScroll() {
   const sectionRef = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const [currentFrame, setCurrentFrame] = useState(0);
-  const [useSingleImageFallback, setUseSingleImageFallback] = useState(false);
-  const phaseVisualRef = useRef<HTMLDivElement>(null);
-  const phaseExplainRef = useRef<HTMLDivElement>(null);
-  const criteriaCardsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const introRef = useRef<HTMLDivElement>(null);
+  const mainGridRef = useRef<HTMLDivElement>(null);
+  const ovenWrapRef = useRef<HTMLDivElement>(null);
+  const featuresWrapRef = useRef<HTMLDivElement>(null);
+  const criteriaRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    if (!sectionRef.current || !pinRef.current || !canvasRef.current) return;
+    const section = sectionRef.current;
+    const pin = pinRef.current;
+    if (!section || !pin) return;
 
-    const totalScrollLength = 2000; // longitud "virtual" del scroll para el acto 1 (360°)
-    let frameIndex = 0;
-
+    const mm = gsap.matchMedia();
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top top",
-          end: `+=${totalScrollLength + 800}`, // scroll total del bloque (360 + ancla + features)
-          scrub: 1.2,
-          pin: true,
-          pinSpacing: true,
-          anticipatePin: 1,
-        },
-      });
+      // --- Desktop: 4 estados con scrub ---
+      mm.add(
+        `(min-width: ${DESKTOP_BP}px)`,
+        () => {
+          const intro = introRef.current;
+          const mainGrid = mainGridRef.current;
+          const ovenWrap = ovenWrapRef.current;
+          const featuresWrap = featuresWrapRef.current;
+          const criteria = criteriaRefs.current.filter(Boolean) as HTMLDivElement[];
 
-      // --- ACTO 1: Rotación 360° ---
-      // Scroll 0 .. totalScrollLength controla el frame (0 .. FRAME_COUNT-1)
-      // --- ACTO 2: Al completar 360°, ancla en frame 0 (posición frontal)
-      ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: "top top",
-        end: `+=${totalScrollLength}`,
-        scrub: 1,
-        onUpdate: (self) => {
-          const progress = self.progress;
-          const index =
-            progress >= 1
-              ? 0
-              : Math.min(
-                  Math.floor(progress * FRAME_COUNT),
-                  FRAME_COUNT - 1
-                );
-          if (index !== frameIndex) {
-            frameIndex = index;
-            setCurrentFrame(index);
-          }
-        },
-      });
+          if (!intro || !mainGrid || !ovenWrap || !featuresWrap) return () => {};
 
-      // --- Fase visual: título "El producto" visible al inicio, se desvanece al avanzar la rotación ---
-      if (phaseVisualRef.current) {
-        gsap.set(phaseVisualRef.current, { opacity: 1 });
-        tl.to(
-          phaseVisualRef.current,
-          { opacity: 0, duration: 0.8, ease: "power2.in" },
-          0.15
-        );
-      }
+          // Estado inicial: texto abajo, horno oculto, grid con columna izquierda cerrada
+          gsap.set(intro, { opacity: 0, y: 48 });
+          gsap.set(mainGrid, { "--col-left": 0, "--col-right": 100 });
+          gsap.set(ovenWrap, { opacity: 0, scale: 0.96 });
+          gsap.set(featuresWrap, { opacity: 0, x: -16 });
+          gsap.set(criteria, { opacity: 0, x: -8 });
 
-      // --- Fase explicativa: criterios de diseño tras anclar el horno ---
-      if (phaseExplainRef.current) {
-        gsap.set(phaseExplainRef.current, { opacity: 0, y: 12 });
-        tl.to(
-          phaseExplainRef.current,
-          { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
-          0.68
-        );
-      }
-      if (criteriaCardsRef.current.length) {
-        gsap.set(criteriaCardsRef.current, { opacity: 0, y: 24 });
-        tl.to(
-          criteriaCardsRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            stagger: 0.15,
-            ease: "power2.out",
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: section,
+              start: "top top",
+              end: `+=${PIN_SCROLL_LENGTH}`,
+              scrub: 1.2,
+              pin: true,
+              pinSpacing: true,
+              anticipatePin: 1,
+            },
+          });
+
+          // Estado 1: texto entra (fade + slide desde abajo)
+          tl.to(intro, { opacity: 1, y: 0, duration: 0.25, ease: "power2.out" });
+          // Estado 2: texto sube muy poco para no quedar bajo el navbar
+          tl.to(
+            intro,
+            { y: -Math.min(12, NAVBAR_OFFSET_PX - 64), duration: 0.2, ease: "power2.inOut" },
+            0.2
+          );
+          // Estado 3: imagen del horno aparece (fade + scale; escala algo mayor para protagonismo)
+          tl.to(ovenWrap, { opacity: 1, scale: 1.08, duration: 0.22, ease: "power2.out" }, 0.42);
+          // Estado 4: columnas más próximas (55% / 45% y menos gap), características con poco x
+          tl.to(
+            mainGrid,
+            {
+              "--col-left": 42,
+              "--col-right": 58,
+              duration: 0.28,
+              ease: "power2.inOut",
+            },
+            0.58
+          );
+          tl.to(
+            featuresWrap,
+            { opacity: 1, x: 0, duration: 0.2, ease: "power2.out" },
+            0.6
+          );
+          tl.to(
+            criteria,
+            { opacity: 1, x: 0, duration: 0.18, stagger: 0.06, ease: "power2.out" },
+            0.64
+          );
+
+          return () => tl.scrollTrigger?.kill();
+        }
+      );
+
+      // --- Mobile: columna, solo fade + slide vertical, sin movimientos laterales ---
+      mm.add(`(max-width: ${DESKTOP_BP - 1}px)`, () => {
+        const intro = introRef.current;
+        const ovenWrap = ovenWrapRef.current;
+        const featuresWrap = featuresWrapRef.current;
+        const criteria = criteriaRefs.current.filter(Boolean) as HTMLDivElement[];
+
+        if (!intro || !ovenWrap || !featuresWrap) return () => {};
+
+        gsap.set(intro, { opacity: 0, y: 32 });
+        gsap.set(ovenWrap, { opacity: 0, y: 24 });
+        gsap.set(featuresWrap, { opacity: 0, y: 24 });
+        gsap.set(criteria, { opacity: 0, y: 16 });
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: `+=${Math.min(PIN_SCROLL_LENGTH, 2400)}`,
+            scrub: 1,
+            pin: true,
+            pinSpacing: true,
+            anticipatePin: 1,
           },
-          0.72
-        );
-      }
-    }, sectionRef);
+        });
 
-    return () => ctx.revert();
+        tl.to(intro, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" });
+        tl.to(ovenWrap, { opacity: 1, y: 0, duration: 0.22, ease: "power2.out" }, 0.15);
+        tl.to(featuresWrap, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" }, 0.32);
+        tl.to(
+          criteria,
+          { opacity: 1, y: 0, duration: 0.18, stagger: 0.08, ease: "power2.out" },
+          0.38
+        );
+
+        return () => tl.scrollTrigger?.kill();
+      });
+    }, section);
+
+    return () => {
+      ctx.revert();
+      mm.revert();
+    };
   }, []);
 
   return (
     <section
       id="producto"
       ref={sectionRef}
-      className="relative bg-industrial-black"
-      aria-label="Producto protagonista - rotación y características"
+      className="relative min-h-screen bg-industrial-black"
+      aria-label="Producto - narrativa por scroll"
     >
-      <div ref={pinRef} className="relative h-screen w-full">
-        {/* Contenedor del horno — iluminación dramática con sombras */}
-        <div
-          ref={canvasRef}
-          className="absolute inset-0 flex items-center justify-center bg-industrial-black"
-        >
-          <div className="relative h-[70vh] w-full max-w-4xl flex items-center justify-center">
-            <div className="relative aspect-square max-h-full w-full flex items-center justify-center [perspective:1000px]">
-              {useSingleImageFallback ? (
-                <div
-                  className="flex max-h-full w-auto items-center justify-center"
-                  style={{
-                    transformStyle: "preserve-3d",
-                    transform: `rotateY(${currentFrame * (360 / FRAME_COUNT)}deg)`,
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={FALLBACK_SINGLE_IMAGE}
-                    alt="Horno industrial"
-                    className="max-h-full w-auto object-contain drop-shadow-2xl"
-                    style={{
-                      boxShadow:
-                        "0 0 80px rgba(0,0,0,0.8), 0 0 120px rgba(201,162,39,0.08)",
+      <div
+        ref={pinRef}
+        className="relative flex min-h-screen w-full flex-col overflow-hidden bg-industrial-black md:min-h-screen"
+      >
+        {/* Desktop: grid con zonas claras. Mobile: columna. */}
+        <div className="flex min-h-0 flex-1 flex-col md:grid md:grid-rows-[auto_1fr] md:grid-cols-1">
+          {/* Zona superior: texto (estados 1–2). En desktop tiene su franja; en mobile va primero en la columna. */}
+          <div
+            ref={introRef}
+            className="flex shrink-0 flex-col items-center justify-center px-6 pt-16 pb-8 md:justify-center md:px-12 md:pt-[var(--product-intro-top,5rem)] md:pb-6"
+            style={
+              { "--product-intro-top": `${NAVBAR_OFFSET_PX}px` } as React.CSSProperties &
+                { "--product-intro-top"?: string }
+            }
+          >
+            <div className="w-full max-w-2xl text-center">
+              <p className="mb-2 text-xs font-medium uppercase tracking-[0.35em] text-industrial-silver">
+                El producto
+              </p>
+              <p className="mb-3 text-lg font-medium uppercase tracking-widest text-industrial-accent md:text-xl">
+                Pensado para la industria
+              </p>
+              <p className="text-sm leading-relaxed text-industrial-silver/90 md:text-base">
+                Cada decisión de diseño responde a una necesidad operativa real.
+              </p>
+            </div>
+          </div>
+
+          {/* Zona principal: en desktop = 2 columnas (features | horno); en mobile = columna (imagen, luego características). */}
+          <div
+            ref={mainGridRef}
+            className="relative flex min-h-0 flex-1 flex-col md:grid md:min-h-0 md:gap-6 md:px-10 md:pb-20"
+            style={
+              {
+                "--col-left": 0,
+                "--col-right": 100,
+                gridTemplateColumns:
+                  "calc(var(--col-left, 0) * 1%) calc(var(--col-right, 100) * 1%)",
+              } as React.CSSProperties & { "--col-left"?: number; "--col-right"?: number }
+            }
+          >
+            {/* Columna izquierda: características (desktop). En state 4 la columna pasa a 1fr. */}
+            <div
+              ref={featuresWrapRef}
+              className="order-2 flex min-h-0 flex-col justify-center overflow-hidden px-6 pb-16 md:order-1 md:min-h-0 md:overflow-visible md:px-0 md:pb-0"
+            >
+              <div className="mx-auto grid w-full max-w-md gap-6 md:mx-0">
+                {DESIGN_CRITERIA.map((item, i) => (
+                  <div
+                    key={item.title}
+                    ref={(el) => {
+                      criteriaRefs.current[i] = el;
                     }}
-                    onError={(e) => {
-                      const t = e.currentTarget;
-                      t.style.display = "none";
-                      const wrap = t.parentElement;
-                      if (!wrap?.querySelector(".oven-placeholder")) {
-                        const ph = document.createElement("div");
-                        ph.className =
-                          "oven-placeholder flex h-48 w-64 items-center justify-center rounded-lg border border-industrial-steel bg-industrial-charcoal text-industrial-silver";
-                        ph.textContent = "Horno industrial";
-                        wrap?.appendChild(ph);
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  key={currentFrame}
-                  src={FRAME_SOURCES[currentFrame]}
-                  alt={`Vista del horno industrial, ángulo ${currentFrame + 1}`}
-                  className="max-h-full w-auto object-contain drop-shadow-2xl pb-12"
+                    className="rounded-lg border border-industrial-steel/50 bg-industrial-charcoal/40 px-5 py-4 backdrop-blur-sm"
+                  >
+                    <h3 className="mb-2 text-sm font-medium uppercase tracking-wide text-white">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed text-industrial-silver/90">
+                      {item.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Columna derecha: imagen del horno (desktop). En mobile va antes que las características (order). */}
+            <div
+              ref={ovenWrapRef}
+              className="order-1 flex min-h-0 flex-1 items-center justify-center px-4 py-8 md:order-2 md:min-h-0 md:py-12"
+            >
+              <div className="relative h-[50vh] w-full max-w-xl md:h-full md:min-h-[400px] md:max-w-3xl">
+                <Image
+                  src={OVEN_IMAGE_SRC}
+                  alt="Horno industrial Bellini"
+                  fill
+                  className="object-contain object-center drop-shadow-2xl"
+                  sizes="(max-width: 768px) 90vw, 50vw"
+                  priority
                   style={{
                     boxShadow:
                       "0 0 80px rgba(0,0,0,0.8), 0 0 120px rgba(201,162,39,0.08)",
                   }}
-                  onError={() => setUseSingleImageFallback(true)}
                 />
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Fase visual: solo el título, sin explicación — "primero lo ves" */}
-        <div
-          ref={phaseVisualRef}
-          className="absolute top-0 left-0 right-0 z-10 pt-16 text-center md:pt-20"
-        >
-          <p className="text-xs font-medium uppercase tracking-[0.35em] text-industrial-silver">
-            El producto
-          </p>
-        </div>
-
-        {/* Texto encuadre: centrado en la página, arriba sobre la imagen del horno */}
-        <div className="absolute left-0 right-0 top-24 z-10 px-6 md:top-28 md:px-12">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="mb-2 text-lg font-medium uppercase tracking-widest text-industrial-accent">
-              Pensado para la industria
-            </p>
-            <p className="text-sm leading-relaxed text-industrial-silver/90">
-              Cada decisión de diseño responde a una necesidad operativa real.
-            </p>
-          </div>
-        </div>
-
-        {/* Fase explicativa: solo las 3 cards de criterios de diseño */}
-        <div
-          ref={phaseExplainRef}
-          className="absolute bottom-0 left-0 right-0 z-10 px-6 pb-20 pt-8 opacity-0 md:px-12 md:pb-24"
-        >
-          <div className="mx-auto max-w-5xl">
-            <div className="grid gap-6 sm:grid-cols-3">
-              {DESIGN_CRITERIA.map((item, i) => (
-                <div
-                  key={item.title}
-                  ref={(el) => {
-                    criteriaCardsRef.current[i] = el;
-                  }}
-                  className="rounded-lg border border-industrial-steel/50 bg-industrial-charcoal/40 px-5 py-4 opacity-0 backdrop-blur-sm"
-                >
-                  <h3 className="mb-2 text-sm font-medium uppercase tracking-wide text-white">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed text-industrial-silver/90">
-                    {item.description}
-                  </p>
-                </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>

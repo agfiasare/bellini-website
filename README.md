@@ -1,13 +1,17 @@
 # Bellini — Landing Hornos Industriales
 
-Landing de una sola página con **scrollytelling** para una empresa de hornos industriales. Next.js 14 (App Router), React, TypeScript, Tailwind CSS y GSAP + ScrollTrigger.
+Landing de una sola página para una empresa de hornos industriales. Next.js 14 (App Router), React, TypeScript, Tailwind CSS y GSAP + ScrollTrigger.
 
 ## Estructura
 
-- **Hero** — Video de fabricación fullscreen, fade out al hacer scroll.
-- **Producto** — Rotación 360° controlada por scroll, ancla en posición frontal, features con stagger.
-- **Corte transversal** — Exploded view con capas y labels animados.
-- **Especificaciones** — Grid de métricas con count-up.
+- **Hero** — Slider automático de imágenes de panadería, overlay oscuro, texto centrado.
+- **Producto** — Narrativa por scroll: texto → imagen estática del horno → características (sin rotación 3D).
+- **Línea** — Cuatro modelos: Convector 4/8 bandejas, Rotativo 10/15 bandejas.
+- **Especificaciones** — Bloque “Métricas y rendimiento” (clientes, presencia regional).
+- **Proceso** — Sección de proceso.
+- **Testimonios** — Testimonios de clientes.
+- **Contacto** — Formulario de contacto.
+- **WhatsApp** — Botón flotante a chat (número editable en `components/WhatsAppFloat.tsx`).
 
 ## Cómo correr
 
@@ -18,14 +22,22 @@ npm run dev
 
 Abrir [http://localhost:3000](http://localhost:3000).
 
-## Assets
+## Build para producción
 
-- **Video hero:** Colocar `fabricacion.mp4` en `public/videos/fabricacion.mp4`. Si no existe, el hero muestra fondo negro y texto.
-- **Secuencia 360°:** Para rotación por imágenes, colocar 72 frames en `public/images/oven-360/` como `oven_001.jpg` … `oven_072.jpg`. Si no existen, se usa la imagen única `oven.jpg` con rotación 3D, o el placeholder SVG `oven.svg` (renombrar a `oven.jpg` o referenciar desde el código).
-- **Placeholder actual:** En `public/images/oven-360/` hay un `oven.svg`. Para usar una sola imagen con efecto 360°, renombrar a `oven.jpg` o añadir `oven.jpg` (foto del horno) y el componente usará ese asset en modo fallback.
+```bash
+npm run build
+npm start
+```
 
-## Ajustes
+## Assets utilizados
 
-- **Duración del scroll del producto:** En `components/ProductScroll.tsx`, variable `totalScrollLength` (píxeles de scroll para completar los 360°).
-- **Número de frames:** En el mismo archivo, `FRAME_COUNT` y `FRAME_PREFIX`.
-- **Colores / tipografía:** `tailwind.config.ts` y `app/globals.css` (industrial black, accent, etc.).
+- **Hero:** Imágenes en `public/images/hero-bakery/` (bakery_01.png … bakery_06.png).
+- **Producto:** Imagen estática en `public/images/oven-360/oven_001.png`.
+- **Línea:** Imágenes en `public/images/lineup/`: convector-4-bandejas.png, convector-8-bandejas.png, rotativo-10-bandejas.png, rotativo-15-bandejas.png.
+- **Logo / icono:** `public/images/assets/bellini_logo_fondo_negro.png`, `bellini_icono_fondo_negro%20-%20copia.png`.
+
+## Ajustes frecuentes
+
+- **WhatsApp:** Número en `components/WhatsAppFloat.tsx`, constante `WHATSAPP_PHONE` (formato Argentina: 549 + área + número).
+- **Duración del pin del producto:** En `components/ProductScroll.tsx`, constante `PIN_SCROLL_LENGTH`.
+- **Colores / tipografía:** `tailwind.config.ts` y `app/globals.css`.
