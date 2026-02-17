@@ -7,8 +7,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/** Imagen estática del horno (sin rotación). */
-const OVEN_IMAGE_SRC = "/images/oven-360/oven_001.png";
+/** Imagen del producto principal (sección Producto). */
+const OVEN_IMAGE_SRC = "/images/assets/Bellini_hornoprincipal.png";
 
 /** Criterios de diseño: título + descripción técnica */
 const DESIGN_CRITERIA = [

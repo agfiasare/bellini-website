@@ -32,7 +32,7 @@ npm start
 ## Assets utilizados
 
 - **Hero:** Imágenes en `public/images/hero-bakery/` (bakery_01.png … bakery_06.png).
-- **Producto:** Imagen estática en `public/images/oven-360/oven_001.png`.
+- **Producto:** Imagen principal en `public/images/assets/Bellini_hornoprincipal.png`.
 - **Línea:** Imágenes en `public/images/lineup/`: convector-4-bandejas.png, convector-8-bandejas.png, rotativo-10-bandejas.png, rotativo-15-bandejas.png.
 - **Logo / icono:** `public/images/assets/bellini_logo_fondo_negro.png`, `bellini_icono_fondo_negro%20-%20copia.png`.
 
