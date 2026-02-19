@@ -1,11 +1,6 @@
-/**
- * Botón flotante de WhatsApp. Redirige al chat con la empresa.
- * Editar WHATSAPP_PHONE para cambiar el número (sin + ni espacios).
- * Formato Argentina: 549 + código área + número (ej: 5491112345678).
- */
-const WHATSAPP_PHONE = "5493815562951";
+import { CONTACT_PHONE_RAW } from "@/lib/contact";
 
-const WA_LINK = `https://wa.me/${WHATSAPP_PHONE}`;
+const WA_LINK = `https://wa.me/${CONTACT_PHONE_RAW}`;
 
 /** Icono WhatsApp (SVG inline, sin dependencias). */
 function WhatsAppIcon({ className }: { className?: string }) {

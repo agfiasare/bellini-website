@@ -3,6 +3,11 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import {
+  CONTACT_EMAIL,
+  CONTACT_PHONE_RAW,
+  CONTACT_PHONE_DISPLAY,
+} from "@/lib/contact";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -83,7 +88,7 @@ export default function ContactSection() {
     return next;
   }, []);
 
-  /** Envío mock: validar y reset. Reemplazar por fetch() al backend cuando esté listo. */
+  /** Envío por mailto a CONTACT_EMAIL con datos del formulario. */
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -92,12 +97,16 @@ export default function ContactSection() {
       if (Object.keys(nextErrors).length > 0) return;
 
       setIsSubmitting(true);
-      // TODO: reemplazar por fetch() al endpoint de contacto
-      setTimeout(() => {
-        setFormState({ nombre: "", empresa: "", email: "", mensaje: "" });
-        setErrors({});
-        setIsSubmitting(false);
-      }, 600);
+      const subject = encodeURIComponent(
+        `Contacto web: ${formState.empresa || formState.nombre}`
+      );
+      const body = encodeURIComponent(
+        `Nombre: ${formState.nombre}\nEmpresa: ${formState.empresa}\nEmail: ${formState.email}\n\nMensaje:\n${formState.mensaje}`
+      );
+      window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+      setFormState({ nombre: "", empresa: "", email: "", mensaje: "" });
+      setErrors({});
+      setIsSubmitting(false);
     },
     [formState, validate]
   );
@@ -140,16 +149,16 @@ export default function ContactSection() {
             </p>
             <div className="space-y-3">
               <a
-                href="mailto:contacto@ejemplo.com"
+                href={`mailto:${CONTACT_EMAIL}`}
                 className="block text-sm text-industrial-silver transition-colors hover:text-industrial-accent"
               >
-                contacto@ejemplo.com
+                {CONTACT_EMAIL}
               </a>
               <a
-                href="tel:+5491112345678"
+                href={`tel:+${CONTACT_PHONE_RAW}`}
                 className="block text-sm text-industrial-silver transition-colors hover:text-industrial-accent"
               >
-                +54 9 11 1234-5678
+                {CONTACT_PHONE_DISPLAY}
               </a>
             </div>
           </div>
