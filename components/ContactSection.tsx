@@ -126,9 +126,46 @@ export default function ContactSection() {
     <section
       id="contacto"
       ref={sectionRef}
-      className="relative w-full border-t border-industrial-steel/50 bg-industrial-black py-20 md:py-28"
+      className="relative w-full border-t border-industrial-steel/50 bg-industrial-black py-1 md:py-5"
       aria-label="Contacto"
     >
+      {/* CTA TIENDA */}
+      <div className="mb-12 border-b border-white/10 pb-8 text-center">
+        {/* Logo */}
+        <div className="mb-4 flex justify-center">
+          <img
+            src="/images/assets/bellini_logo_fondo_negro.png"
+            alt="Bellini Hornos Industriales"
+            className="h-24 w-auto opacity-80"
+          />
+        </div>
+
+        {/* Texto */}
+        <p className="mb-4 text-sm text-industrial-silver">
+          ¿Preferís avanzar directamente?
+          <br />
+          Accedé a nuestra tienda online.
+        </p>
+
+        {/* Botón */}
+        <a
+          href="https://store.bellini.ar"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="
+              inline-flex items-center justify-center
+              rounded-md border border-industrial-accent
+              px-6 py-3
+              text-sm font-medium uppercase tracking-wide
+              text-industrial-accent
+              transition-colors
+              hover:bg-industrial-accent hover:text-black
+            "
+        >
+          Acceder a la tienda
+        </a>
+      </div>
+
       <div className="mx-auto max-w-6xl px-6">
         <header className="mb-14 text-center">
           <h2 className="text-3xl font-light tracking-tight text-white md:text-4xl">

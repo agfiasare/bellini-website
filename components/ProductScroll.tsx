@@ -7,30 +7,16 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/* ================= CONFIGURACIÓN ================= */
+/* ================= CONFIG ================= */
 
-/** Imagen del producto */
 const OVEN_IMAGE_SRC = "/images/assets/Bellini_hornoprincipal.png";
 
-/**
- * Offset vertical BASE del bloque producto.
- * 👉 Mueve horno + features juntos.
- */
-const PRODUCT_BLOCK_OFFSET_Y = 64; // px
+/** Offsets SOLO DESKTOP */
+const PRODUCT_BLOCK_OFFSET_Y = 64;
+const FEATURES_OFFSET_Y = 48;
 
-/**
- * Offset vertical EXTRA SOLO para las características.
- * 👉 ESTE es el que tenés que tocar ahora.
- */
-const FEATURES_OFFSET_Y = 48; // px  ← AJUSTÁ ESTE VALOR
-
-/** Duración total del pin */
 const PIN_SCROLL_LENGTH = 1200;
-
-/** Breakpoint desktop */
 const DESKTOP_BP = 768;
-
-/** Altura reservada para el navbar */
 const NAVBAR_OFFSET = 80;
 
 /* ================= DATA ================= */
@@ -85,29 +71,26 @@ export default function ProductScroll() {
           },
         });
 
-        // 1️⃣ Texto
         tl.to(introRef.current, { opacity: 1, duration: 0.25 });
 
-        // 2️⃣ Horno centrado
         tl.to(
           ovenRef.current,
           { opacity: 1, duration: 0.3, ease: "power2.out" },
           0.25
         );
 
-        // 3️⃣ Horno se desplaza a la derecha (solo X)
         tl.to(
           ovenRef.current,
           { x: "25vw", duration: 0.45, ease: "power2.inOut" },
           0.6
         );
 
-        // 4️⃣ Características
         tl.to(
           featuresRef.current,
-          { opacity: 1, x: 0, duration: 0.3, ease: "power2.out" },
+          { opacity: 1, x: 0, duration: 0.3 },
           0.65
         );
+
         tl.to(
           criteriaRefs.current,
           { opacity: 1, x: 0, stagger: 0.08, duration: 0.25 },
@@ -121,6 +104,7 @@ export default function ProductScroll() {
       mm.add(`(max-width: ${DESKTOP_BP - 1}px)`, () => {
         gsap.set([introRef.current, ovenRef.current, featuresRef.current], {
           opacity: 0,
+          x: 0,
         });
         gsap.set(criteriaRefs.current, { opacity: 0 });
 
@@ -178,13 +162,14 @@ export default function ProductScroll() {
         {/* ================= HORNO ================= */}
         <div
           ref={ovenRef}
-          className="absolute inset-x-0 flex justify-center pointer-events-none"
-          style={{
-            top: `calc(50% + ${PRODUCT_BLOCK_OFFSET_Y}px)`,
-            transform: "translateY(-50%)",
-          }}
+          className="
+                    relative flex justify-center mt-2
+                    md:absolute md:inset-x-0 md:pointer-events-none
+                    md:top-[calc(50%+64px)] md:-translate-y-1/2
+                  "
         >
-          <div className="relative h-[60vh] w-[90vw] max-w-[36rem]">
+
+          <div className="relative h-[58vh] w-[90vw] max-w-[36rem]">
             <Image
               src={OVEN_IMAGE_SRC}
               alt="Horno industrial Bellini"
@@ -199,10 +184,10 @@ export default function ProductScroll() {
         <div
           ref={featuresRef}
           className="
-            relative z-10 mt-[60vh]
+            relative z-10
+            mt-3
             flex justify-center px-6 pb-24
-            md:mt-0 md:absolute md:left-12
-            md:-translate-y-1/2
+            md:absolute md:left-12 md:mt-0 md:-translate-y-1/2
           "
           style={{
             top: `calc(50% + ${PRODUCT_BLOCK_OFFSET_Y + FEATURES_OFFSET_Y}px)`,
@@ -212,7 +197,9 @@ export default function ProductScroll() {
             {DESIGN_CRITERIA.map((item, i) => (
               <div
                 key={item.title}
-                ref={(el) => { criteriaRefs.current[i] = el; }}
+                ref={(el) => {
+                  criteriaRefs.current[i] = el;
+                }}
                 className="rounded-lg border border-gray-700 bg-gray-900/60 px-5 py-4"
               >
                 <h3 className="mb-2 text-sm uppercase tracking-wide text-white">

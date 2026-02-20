@@ -99,7 +99,7 @@ export default function TestimonialsSection() {
     <section
       id="testimonios"
       ref={sectionRef}
-      className="relative min-h-screen w-full border-t border-industrial-steel/50 bg-industrial-black py-20 md:py-28"
+      className="relative min-h-screen w-full border-t border-industrial-steel/50 bg-industrial-black py-5 md:py-5"
       aria-label="Empresas que confían en Bellini"
     >
       <div className="mx-auto max-w-6xl px-6">

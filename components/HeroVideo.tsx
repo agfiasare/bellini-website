@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 
@@ -42,6 +42,7 @@ export default function HeroVideo() {
   const navbarRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
   const hasTriggeredRef = useRef(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // --- Entrada inicial del copy (stagger) ---
   useEffect(() => {
@@ -66,7 +67,7 @@ export default function HeroVideo() {
         duration: 0.8,
         ease: "power2.out",
       },
-      0.15
+        0.15
       )
       .to(
         titleRef.current,
@@ -157,14 +158,18 @@ export default function HeroVideo() {
               priority
             />
           </a>
-          <nav className="flex items-center gap-6 text-sm text-industrial-silver">
+          {/* ===== NAV DESKTOP ===== */}
+          <nav className="hidden items-center gap-6 text-sm text-industrial-silver md:flex">
             <a href="#producto" className="transition-colors hover:text-industrial-accent">
               Producto
             </a>
             <a href="#linea" className="transition-colors hover:text-industrial-accent">
               Línea
             </a>
-            <a href="#especificaciones" className="transition-colors hover:text-industrial-accent">
+            <a
+              href="#especificaciones"
+              className="transition-colors hover:text-industrial-accent"
+            >
               Especificaciones
             </a>
             <a href="#proceso" className="transition-colors hover:text-industrial-accent">
@@ -173,8 +178,77 @@ export default function HeroVideo() {
             <a href="#contacto" className="transition-colors hover:text-industrial-accent">
               Contacto
             </a>
+
+            {/* CTA TIENDA DESKTOP */}
+            <a
+              href="https://store.bellini.ar"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                ml-4 inline-flex items-center
+                rounded-md border border-industrial-accent
+                px-4 py-2
+                text-xs font-medium uppercase tracking-wide
+                text-industrial-accent
+                transition-colors
+                hover:bg-industrial-accent hover:text-black
+              "
+            >
+              Acceder a la tienda
+            </a>
           </nav>
+
+          {/* ===== BOTÓN HAMBURGUESA (MOBILE) ===== */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="text-industrial-silver md:hidden"
+            aria-label="Abrir menú"
+          >
+            ☰
+          </button>
+
         </div>
+        {/* ===== MENÚ MOBILE ===== */}
+        {menuOpen && (
+          <div className="md:hidden">
+            <nav className="flex flex-col gap-6 border-t border-industrial-steel/40 bg-industrial-black/95 px-6 py-8 text-sm text-industrial-silver">
+              <a href="#producto" onClick={() => setMenuOpen(false)}>
+                Producto
+              </a>
+              <a href="#linea" onClick={() => setMenuOpen(false)}>
+                Línea
+              </a>
+              <a href="#especificaciones" onClick={() => setMenuOpen(false)}>
+                Especificaciones
+              </a>
+              <a href="#proceso" onClick={() => setMenuOpen(false)}>
+                Proceso
+              </a>
+              <a href="#contacto" onClick={() => setMenuOpen(false)}>
+                Contacto
+              </a>
+
+              <div className="my-2 h-px bg-white/10" />
+
+              {/* CTA TIENDA MOBILE */}
+              <a
+                href="https://store.bellini.ar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                  mt-2 inline-flex justify-center
+                  rounded-md border border-industrial-accent
+                  px-6 py-3
+                  text-xs font-medium uppercase tracking-wide
+                  text-industrial-accent
+                "
+              >
+                Acceder a la tienda
+              </a>
+            </nav>
+          </div>
+        )}
+
       </header>
 
       <section
